@@ -1,5 +1,6 @@
 package mk.poplaki.service;
 
+import mk.poplaki.domain.Company;
 import mk.poplaki.domain.CompanyStatus;
 import mk.poplaki.dto.company.CompanyRequest;
 import mk.poplaki.dto.company.CompanyResponse;
@@ -14,4 +15,7 @@ public interface AdminCompanyService {
 
     void updateCompanyStatus(String id, CompanyStatus status);
 
+    Company getCompanyById(String id);
+
+    void updateCompany(Company company);
 }

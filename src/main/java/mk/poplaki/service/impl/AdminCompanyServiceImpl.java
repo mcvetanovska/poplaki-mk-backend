@@ -52,4 +52,12 @@ public class AdminCompanyServiceImpl implements AdminCompanyService {
         company.setStatus(CompanyStatus.APPROVED);
         return company;
     }
+
+    public Company getCompanyById(String id) {
+        return companyRepository.findById(id).orElse(null);
+    }
+
+    public void updateCompany(Company company) {
+        companyRepository.save(company);
+    }
 }

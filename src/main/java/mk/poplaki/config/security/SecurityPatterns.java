@@ -11,6 +11,6 @@ public class SecurityPatterns {
     protected static final String[] REGISTER = {"/v1/users"};
     protected static final String[] ERROR = {"/error/**"};
     protected static final String[] ADMIN = {"/v1/admin/complaints/**", "/v1/admin/companies/**"};
-    protected static final String[] PUBLIC = {"/v1/complaints/**", "/v1/companies/**", "/v1/users/count"};
+    protected static final String[] PUBLIC = {"/v1/complaints/**", "/v1/companies/**", "/v1/users/count", "/uploads/logos/**"};
     protected static final String[] ALL = {"/**"};
 }
