@@ -28,5 +28,7 @@ public class Complaint extends BaseDocument {
     private ComplaintStatusType statusType = ComplaintStatusType.PENDING;
     private Instant resolvedTime;
 
+    private List<Comment> comments;
+    private int voteCount;
 
 }

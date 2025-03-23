@@ -1,14 +1,23 @@
 package mk.poplaki.service.impl;
 
+import mk.poplaki.domain.Comment;
 import mk.poplaki.domain.Company;
 import mk.poplaki.domain.Complaint;
+import mk.poplaki.dto.comment.CommentResponse;
 import mk.poplaki.dto.company.CompanyResponse;
 import mk.poplaki.dto.complaint.ComplaintResponse;
+import mk.poplaki.repository.UserRepository;
 import mk.poplaki.service.MapperService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MapperServiceImpl implements MapperService {
+
+    private final UserRepository userRepository;
+
+    public MapperServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public ComplaintResponse mapToComplaintResponse(Complaint complaint, Company company) {
@@ -52,5 +61,22 @@ public class MapperServiceImpl implements MapperService {
         companyResponse.setTotalComplaints(allComplaints);
         companyResponse.setOrder(company.isOrder());
         return companyResponse;
+    }
+
+    @Override
+    public CommentResponse mapToCommentResponse(Comment comment) {
+        CommentResponse commentResponse = new CommentResponse();
+        commentResponse.setId(comment.getId());
+        commentResponse.setComplaintId(comment.getComplaintId());
+        commentResponse.setUserId(comment.getUserId());
+        commentResponse.setText(comment.getText());
+        commentResponse.setCreatedOn(comment.getCreatedOn());
+
+        String username = userRepository.findById(comment.getUserId())
+                .map(user -> user.getNickname())
+                .orElse("Unknown");
+        commentResponse.setNickname(username);
+
+        return commentResponse;
     }
 }

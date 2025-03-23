@@ -1,6 +1,7 @@
 package mk.poplaki.dto.complaint;
 
 import mk.poplaki.domain.ComplaintStatusType;
+import mk.poplaki.dto.comment.CommentResponse;
 import mk.poplaki.dto.company.CompanyResponse;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,4 +23,6 @@ public class ComplaintResponse {
     private Instant createdOn;
     private Instant modifiedOn;
     private CompanyResponse company;
+    private List<CommentResponse> comments;
+    private int voteCount;
 }

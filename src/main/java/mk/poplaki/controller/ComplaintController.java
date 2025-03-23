@@ -1,7 +1,9 @@
 package mk.poplaki.controller;
 
+import mk.poplaki.dto.comment.CommentRequest;
 import mk.poplaki.dto.complaint.ComplaintRequest;
 import mk.poplaki.dto.complaint.ComplaintResponse;
+import mk.poplaki.dto.vote.VoteRequest;
 import mk.poplaki.service.ComplaintService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,18 @@ public class ComplaintController {
     @GetMapping("search")
     public Page<ComplaintResponse> searchComplaints(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam String title) {
         return complaintService.searchComplaints(page, size, title);
+    }
+
+    @PostMapping("/{id}/comments")
+    public void addComment(@PathVariable String id, @RequestBody @Valid CommentRequest commentRequest) {
+        commentRequest.setComplaintId(id);
+        complaintService.addComment(commentRequest);
+    }
+
+    @PostMapping("/{id}/votes")
+    public void addVote(@PathVariable String id, @RequestBody @Valid VoteRequest voteRequest) {
+        voteRequest.setComplaintId(id);
+        complaintService.addVote(voteRequest);
     }
 
 }

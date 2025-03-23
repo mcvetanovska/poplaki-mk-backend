@@ -3,13 +3,16 @@ package mk.poplaki.service.impl;
 import mk.poplaki.config.exception.ConflictException;
 import mk.poplaki.config.exception.RecordNotFoundException;
 import mk.poplaki.config.security.context.SecurityContext;
-import mk.poplaki.domain.Company;
-import mk.poplaki.domain.Complaint;
-import mk.poplaki.domain.ComplaintStatusType;
+import mk.poplaki.domain.*;
+import mk.poplaki.dto.comment.CommentRequest;
+import mk.poplaki.dto.comment.CommentResponse;
 import mk.poplaki.dto.complaint.ComplaintRequest;
 import mk.poplaki.dto.complaint.ComplaintResponse;
+import mk.poplaki.dto.vote.VoteRequest;
+import mk.poplaki.repository.CommentRepository;
 import mk.poplaki.repository.CompanyRepository;
 import mk.poplaki.repository.ComplaintRepository;
+import mk.poplaki.repository.VoteRepository;
 import mk.poplaki.service.ComplaintService;
 import mk.poplaki.service.MapperService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,8 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final ComplaintRepository complaintRepository;
     private final CompanyRepository companyRepository;
     private final MapperService mapperService;
+    private final CommentRepository commentRepository;
+    private final VoteRepository voteRepository;
 
     @Override
     public Page<ComplaintResponse> getComplaintsPaginated(int page, int size, String sortBy, Sort.Direction sortDirection) {
@@ -74,12 +79,23 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new RecordNotFoundException("Complaint not found");
         }
 
-        String companyId = complaintOptional.get().getCompanyId();
+        Complaint complaint = complaintOptional.get();
+        String companyId = complaint.getCompanyId();
         Company company = companyRepository.findById(companyId).orElse(null);
 
-        return complaintRepository.findById(id)
-                .map(complaint -> mapperService.mapToComplaintResponse(complaint, company))
-                .orElseThrow(() -> new RecordNotFoundException("Complaint not found"));
+        List<CommentResponse> comments = commentRepository.findByComplaintId(id).stream()
+                .map(mapperService::mapToCommentResponse)
+                .toList();
+
+        long upvotes = voteRepository.countByComplaintIdAndUpvote(id, true);
+        long downvotes = voteRepository.countByComplaintIdAndUpvote(id, false);
+        int voteCount = (int) (upvotes - downvotes);
+
+        ComplaintResponse complaintResponse = mapperService.mapToComplaintResponse(complaint, company);
+        complaintResponse.setComments(comments);
+        complaintResponse.setVoteCount(voteCount);
+
+        return complaintResponse;
     }
 
     @Override
@@ -133,6 +149,42 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         complaint.setStatusType(ComplaintStatusType.RESOLVED);
+        complaintRepository.save(complaint);
+    }
+
+    @Override
+    public void addComment(CommentRequest commentRequest) {
+        Complaint complaint = complaintRepository.findById(commentRequest.getComplaintId())
+                .orElseThrow(() -> new RecordNotFoundException("Complaint not found"));
+
+        Comment comment = new Comment();
+        comment.setComplaintId(commentRequest.getComplaintId());
+        comment.setUserId(securityContext.getPrincipal().getUserId());
+        comment.setText(commentRequest.getText());
+
+        commentRepository.save(comment);
+
+        List<Comment> comments = commentRepository.findByComplaintId(commentRequest.getComplaintId());
+        complaint.setComments(comments);
+        complaintRepository.save(complaint);
+    }
+
+    @Override
+    public void addVote(VoteRequest voteRequest) {
+        Complaint complaint = complaintRepository.findById(voteRequest.getComplaintId())
+                .orElseThrow(() -> new RecordNotFoundException("Complaint not found"));
+
+        Vote vote = new Vote();
+        vote.setComplaintId(voteRequest.getComplaintId());
+        vote.setUserId(securityContext.getPrincipal().getUserId());
+        vote.setUpvote(voteRequest.isUpvote());
+
+        voteRepository.save(vote);
+
+        long upvotes = voteRepository.countByComplaintIdAndUpvote(voteRequest.getComplaintId(), true);
+        long downvotes = voteRepository.countByComplaintIdAndUpvote(voteRequest.getComplaintId(), false);
+
+        complaint.setVoteCount((int) (upvotes - downvotes));
         complaintRepository.save(complaint);
     }
 }
